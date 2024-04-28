@@ -1,13 +1,12 @@
 import { useState } from "react";
-
+import { searchForShows } from "../api/tvmaze";
 
 
 const Home = () => {
 
 const [searchStr, setSearchStr] = useState("");
-const [result, setResult] = useState(null);
-
-console.log(searchStr);
+const [apiData, setApiData] = useState(null)
+const [apiDataError, setApiDataError] = useState(null)
 
 const onSearchInputChange = (ev) => {
     // console.log(ev.target.value);
@@ -17,14 +16,26 @@ const onSearchInputChange = (ev) => {
 const onSearch = async (ev) => {
     ev.preventDefault();
 
-    const result = await fetch(`https://api.tvmaze.com/search/shows?q=${searchStr}`)
-    const setResult =  await result.json()
-
-    console.log(setResult);
-
+    try {
+        setApiDataError(null)
+        const result = await searchForShows(searchStr);
+        setApiData(result);
+    } catch (error) {
+        setApiDataError(error);
+    }
+ 
 }
 
+const renderApiData = () => {
+    if(apiDataError) {
+        return <div>Error Occured: {apiDataError.message}</div>
+    }
+    if(apiData) {
+        return apiData.map(data => <div key={data.show.id}>{data.show.name}</div>)
+    }
 
+    return null;
+}
 
 
 // https://api.tvmaze.com/search/shows?q=spiderman
@@ -39,13 +50,11 @@ const onSearch = async (ev) => {
             <button type="submit" onClick={onSearch} >Search</button>
             </form>
 
-            <div>Search Result...</div>
+            <div>
+                {renderApiData()}
+            </div>
 
-            <ul>
-                {setResult.map((key, data) => {
-                    <li key={key}>{data.name}</li>
-                })}
-            </ul>
+        
 
         </div>
     )
